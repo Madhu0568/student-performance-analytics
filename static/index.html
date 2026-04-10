@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Analytics</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; color: #1a1a2e; padding: 20px; }
+        h1 { text-align: center; color: #2d3436; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #636e72; margin-bottom: 25px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .stat-card .value { font-size: 2.2em; font-weight: bold; }
+        .stat-card .label { color: #636e72; font-size: 0.9em; margin-top: 4px; }
+        .v-blue { color: #0984e3; }
+        .v-green { color: #00b894; }
+        .v-orange { color: #e17055; }
+        .v-purple { color: #6c5ce7; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #dfe6e9; padding-bottom: 5px; }
+        .tab { padding: 10px 20px; cursor: pointer; border-radius: 8px 8px 0 0; background: white; border: 1px solid #dfe6e9; border-bottom: none; color: #636e72; font-weight: 600; transition: all 0.2s; }
+        .tab.active { background: #0984e3; color: white; border-color: #0984e3; }
+        .tab:hover { background: #74b9ff; color: white; }
+        .panel { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: none; }
+        .panel.active { display: block; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px 15px; text-align: left; border-bottom: 1px solid #dfe6e9; }
+        th { background: #f8f9fa; color: #636e72; font-weight: 600; font-size: 0.9em; }
+        .badge { padding: 3px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600; }
+        .badge-critical { background: #ffeaea; color: #d63031; }
+        .badge-high { background: #fff3e0; color: #e17055; }
+        .badge-moderate { background: #fff9c4; color: #f39c12; }
+        .grade-A { color: #00b894; font-weight: bold; }
+        .grade-B { color: #0984e3; }
+        .grade-C { color: #fdcb6e; }
+        .grade-D { color: #e17055; }
+        .grade-F { color: #d63031; font-weight: bold; }
+        .chart-bar { display: flex; align-items: center; margin: 5px 0; }
+        .chart-bar .bar-label { width: 80px; font-size: 0.9em; font-weight: 600; }
+        .chart-bar .bar { height: 24px; border-radius: 4px; transition: width 0.5s; min-width: 2px; }
+        .chart-bar .bar-value { margin-left: 8px; font-size: 0.85em; color: #636e72; }
+        .dept-colors { background: linear-gradient(90deg, #0984e3, #00b894); }
+        .grade-colors-A { background: #00b894; }
+        .grade-colors-B { background: #0984e3; }
+        .grade-colors-C { background: #fdcb6e; }
+        .grade-colors-D { background: #e17055; }
+        .grade-colors-F { background: #d63031; }
+        select { padding: 8px 12px; border-radius: 8px; border: 1px solid #dfe6e9; font-size: 0.9em; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Student Performance Analytics</h1>
+    <p class="subtitle">Full-Stack Academic Analytics Platform</p>
+
+    <div class="stats-grid">
+        <div class="stat-card"><div class="value v-blue" id="total-students">-</div><div class="label">Total Students</div></div>
+        <div class="stat-card"><div class="value v-green" id="total-subjects">-</div><div class="label">Subjects</div></div>
+        <div class="stat-card"><div class="value v-orange" id="overall-avg">-</div><div class="label">Overall Average</div></div>
+        <div class="stat-card"><div class="value v-purple" id="at-risk-count">-</div><div class="label">At-Risk Students</div></div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('dept')">Department Overview</div>
+        <div class="tab" onclick="showTab('subjects')">Subject Trends</div>
+        <div class="tab" onclick="showTab('atrisk')">At-Risk Students</div>
+        <div class="tab" onclick="showTab('grades')">Grade Distribution</div>
+    </div>
+
+    <div class="panel active" id="panel-dept">
+        <h3 style="margin-bottom:15px;color:#2d3436">Department Performance</h3>
+        <div id="dept-chart"></div>
+        <table style="margin-top:15px">
+            <thead><tr><th>Department</th><th>Students</th><th>Avg Marks</th></tr></thead>
+            <tbody id="dept-table"></tbody>
+        </table>
+    </div>
+
+    <div class="panel" id="panel-subjects">
+        <h3 style="margin-bottom:15px;color:#2d3436">Subject Performance Trends</h3>
+        <table>
+            <thead><tr><th>Subject</th><th>Code</th><th>Credits</th><th>Avg Marks</th><th>Pass Rate</th><th>Students</th></tr></thead>
+            <tbody id="subject-table"></tbody>
+        </table>
+    </div>
+
+    <div class="panel" id="panel-atrisk">
+        <h3 style="margin-bottom:15px;color:#2d3436">At-Risk Students</h3>
+        <select onchange="loadAtRisk(this.value)">
+            <option value="45">Below 45 marks</option>
+            <option value="50">Below 50 marks</option>
+            <option value="40">Below 40 marks</option>
+        </select>
+        <table>
+            <thead><tr><th>Name</th><th>Roll No</th><th>Dept</th><th>Avg Marks</th><th>Failed</th><th>Risk</th></tr></thead>
+            <tbody id="atrisk-table"></tbody>
+        </table>
+    </div>
+
+    <div class="panel" id="panel-grades">
+        <h3 style="margin-bottom:15px;color:#2d3436">Grade Distribution</h3>
+        <div id="grade-chart"></div>
+    </div>
+
+    <script>
+        function showTab(name) {
+            document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', t.textContent.toLowerCase().includes(name.substring(0,4))));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+        }
+
+        async function loadDashboard() {
+            const res = await fetch('/api/analytics/dashboard');
+            const data = await res.json();
+            document.getElementById('total-students').textContent = data.total_students;
+            document.getElementById('total-subjects').textContent = data.total_subjects;
+            document.getElementById('overall-avg').textContent = data.overall_average;
+
+            const deptChart = document.getElementById('dept-chart');
+            const deptTable = document.getElementById('dept-table');
+            deptChart.innerHTML = '';
+            deptTable.innerHTML = '';
+            const maxAvg = Math.max(...data.departments.map(d => d.avg_marks));
+            for (const d of data.departments) {
+                const pct = (d.avg_marks / maxAvg * 100).toFixed(0);
+                deptChart.innerHTML += `<div class="chart-bar"><div class="bar-label">${d.department}</div><div class="bar dept-colors" style="width:${pct}%"></div><div class="bar-value">${d.avg_marks}</div></div>`;
+                deptTable.innerHTML += `<tr><td><strong>${d.department}</strong></td><td>${d.students}</td><td>${d.avg_marks}</td></tr>`;
+            }
+
+            const gradeChart = document.getElementById('grade-chart');
+            gradeChart.innerHTML = '';
+            const maxCount = Math.max(...data.grade_distribution.map(g => g.count));
+            for (const g of data.grade_distribution) {
+                const pct = (g.count / maxCount * 100).toFixed(0);
+                const colorClass = g.grade.startsWith('A') ? 'A' : g.grade.startsWith('B') ? 'B' : g.grade === 'C' ? 'C' : g.grade === 'D' ? 'D' : 'F';
+                gradeChart.innerHTML += `<div class="chart-bar"><div class="bar-label">${g.grade}</div><div class="bar grade-colors-${colorClass}" style="width:${pct}%"></div><div class="bar-value">${g.count} students</div></div>`;
+            }
+        }
+
+        async function loadSubjects() {
+            const res = await fetch('/api/analytics/subject-trends');
+            const data = await res.json();
+            const tbody = document.getElementById('subject-table');
+            tbody.innerHTML = '';
+            for (const s of data.subjects) {
+                tbody.innerHTML += `<tr><td><strong>${s.name}</strong></td><td>${s.code}</td><td>${s.credits}</td>
+                    <td>${s.avg_marks}</td><td>${s.pass_rate}%</td><td>${s.total_students}</td></tr>`;
+            }
+        }
+
+        async function loadAtRisk(threshold) {
+            const res = await fetch(`/api/analytics/at-risk?threshold=${threshold}`);
+            const data = await res.json();
+            document.getElementById('at-risk-count').textContent = data.count;
+            const tbody = document.getElementById('atrisk-table');
+            tbody.innerHTML = '';
+            for (const s of data.students) {
+                tbody.innerHTML += `<tr><td>${s.name}</td><td>${s.roll_number}</td><td>${s.department}</td>
+                    <td>${s.avg_marks}</td><td>${s.failed_subjects}</td>
+                    <td><span class="badge badge-${s.risk_level}">${s.risk_level}</span></td></tr>`;
+            }
+        }
+
+        loadDashboard();
+        loadSubjects();
+        loadAtRisk(45);
+    </script>
+</body>
+</html>
