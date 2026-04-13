@@ -15,6 +15,18 @@ def get_db():
     return conn
 
 
+def get_status(marks):
+    """Classify a student's academic standing based on average marks."""
+    if marks < 40:
+        return "At Risk"
+    elif marks < 55:
+        return "Needs Attention"
+    elif marks < 70:
+        return "Average"
+    else:
+        return "Good Standing"
+
+
 def init_db():
     conn = get_db()
     cursor = conn.cursor()
@@ -92,13 +104,13 @@ def seed_data():
         subject_ids[code] = sid
 
     students = []
-    for i in range(200):
+    for i in range(1000):
         student_id = str(uuid.uuid4())[:8]
         dept = random.choice(departments)
         sem = random.randint(1, 8)
         name = f"{random.choice(first_names)} {random.choice(last_names)}"
-        roll = f"{dept[:2]}{2020 + (sem // 2)}{str(i+1).zfill(3)}"
-        email = f"{name.lower().replace(' ', '.')}@nit.ac.in"
+        roll = f"{dept[:2]}{2020 + (sem // 2)}{str(i+1).zfill(4)}"
+        email = f"{name.lower().replace(' ', '.')}{i}@nit.ac.in"
 
         cursor.execute("INSERT INTO students VALUES (?, ?, ?, ?, ?, ?, ?)",
                        (student_id, name, roll, dept, sem, email, datetime.utcnow().isoformat()))
@@ -304,6 +316,7 @@ def at_risk_students():
         d = dict(r)
         d["avg_marks"] = round(d["avg_marks"], 1)
         d["risk_level"] = "critical" if d["avg_marks"] < 30 else "high" if d["avg_marks"] < 40 else "moderate"
+        d["academic_status"] = get_status(d["avg_marks"])
         students.append(d)
 
     conn.close()
@@ -329,6 +342,28 @@ def dashboard_stats():
         SELECT grade, COUNT(*) as count FROM grades GROUP BY grade ORDER BY grade
     """).fetchall()
 
+    # High scorers: students with average marks above 75
+    high_scorers = conn.execute("""
+        SELECT COUNT(DISTINCT student_id) as count
+        FROM (
+            SELECT student_id, AVG(marks) as avg_marks
+            FROM grades
+            GROUP BY student_id
+            HAVING avg_marks > 75
+        )
+    """).fetchone()[0]
+
+    # At-risk: students below 45
+    at_risk = conn.execute("""
+        SELECT COUNT(DISTINCT student_id) as count
+        FROM (
+            SELECT student_id, AVG(marks) as avg_marks
+            FROM grades
+            GROUP BY student_id
+            HAVING avg_marks < 45
+        )
+    """).fetchone()[0]
+
     conn.close()
     return jsonify({
         "total_students": total_students,
@@ -336,8 +371,11 @@ def dashboard_stats():
         "overall_average": round(overall["avg"], 1) if overall["avg"] else 0,
         "overall_min": overall["min"],
         "overall_max": overall["max"],
+        "high_scorers": high_scorers,
+        "at_risk_students": at_risk,
         "departments": [{"department": d["department"], "students": d["students"],
-                         "avg_marks": round(d["avg_marks"], 1) if d["avg_marks"] else 0} for d in dept_stats],
+                         "avg_marks": round(d["avg_marks"], 1) if d["avg_marks"] else 0,
+                         "academic_status": get_status(d["avg_marks"] or 0)} for d in dept_stats],
         "grade_distribution": [dict(g) for g in grade_dist],
     })
 
