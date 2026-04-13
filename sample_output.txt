@@ -1,0 +1,101 @@
+==============================================================
+  Student Performance Analytics — Sample API Output
+==============================================================
+
+--- Dashboard summary ---
+$ curl http://localhost:5003/api/analytics/summary
+
+Response (200):
+{
+  "total_students": 1000,
+  "total_subjects": 5,
+  "overall_average": 61.4,
+  "overall_min": 12,
+  "overall_max": 98,
+  "high_scorers": 187,
+  "at_risk_students": 134,
+  "departments": [
+    {"department": "Computer Science", "students": 205, "avg_marks": 64.2, "academic_status": "Good Standing"},
+    {"department": "Electronics",      "students": 198, "avg_marks": 59.7, "academic_status": "Average"},
+    {"department": "Mechanical",       "students": 201, "avg_marks": 58.1, "academic_status": "Average"},
+    {"department": "Civil",            "students": 197, "avg_marks": 63.0, "academic_status": "Good Standing"},
+    {"department": "Chemical",         "students": 199, "avg_marks": 60.8, "academic_status": "Average"}
+  ],
+  "grade_distribution": [
+    {"grade": "A", "count": 312},
+    {"grade": "B", "count": 498},
+    {"grade": "C", "count": 1341},
+    {"grade": "D", "count": 1102},
+    {"grade": "F", "count": 747}
+  ]
+}
+
+--- At-risk students (below 45 average) ---
+$ curl "http://localhost:5003/api/students/at-risk?threshold=45"
+
+Response (200):
+{
+  "threshold": 45,
+  "count": 134,
+  "students": [
+    {
+      "id": 88,
+      "name": "Ravi Kumar",
+      "department": "Mechanical",
+      "avg_marks": 28.6,
+      "risk_level": "critical",
+      "academic_status": "At Risk"
+    },
+    {
+      "id": 213,
+      "name": "Priya Nair",
+      "department": "Chemical",
+      "avg_marks": 36.1,
+      "risk_level": "high",
+      "academic_status": "At Risk"
+    },
+    {
+      "id": 451,
+      "name": "Arjun Mehta",
+      "department": "Electronics",
+      "avg_marks": 43.8,
+      "risk_level": "moderate",
+      "academic_status": "Needs Attention"
+    }
+  ]
+}
+
+--- Student detail with subject breakdown ---
+$ curl http://localhost:5003/api/students/88
+
+Response (200):
+{
+  "id": 88,
+  "name": "Ravi Kumar",
+  "email": "ravi.kumar88@student.edu",
+  "department": "Mechanical",
+  "year": 2,
+  "grades": [
+    {"subject": "Mathematics",  "marks": 24, "grade": "F"},
+    {"subject": "Physics",      "marks": 31, "grade": "F"},
+    {"subject": "Chemistry",    "marks": 29, "grade": "F"},
+    {"subject": "Programming",  "marks": 33, "grade": "D"},
+    {"subject": "Engineering",  "marks": 26, "grade": "F"}
+  ],
+  "avg_marks": 28.6,
+  "academic_status": "At Risk"
+}
+
+--- Top 5 students ---
+$ curl "http://localhost:5003/api/students/top?limit=5"
+
+Response (200):
+{
+  "students": [
+    {"id": 7,   "name": "Divya Sharma",  "department": "Computer Science", "avg_marks": 96.4},
+    {"id": 143, "name": "Sneha Reddy",   "department": "Civil",            "avg_marks": 95.8},
+    {"id": 502, "name": "Karan Joshi",   "department": "Computer Science", "avg_marks": 94.2},
+    {"id": 311, "name": "Ananya Singh",  "department": "Electronics",      "avg_marks": 93.7},
+    {"id": 678, "name": "Rahul Verma",   "department": "Chemical",         "avg_marks": 92.9}
+  ]
+}
