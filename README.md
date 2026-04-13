@@ -1,12 +1,14 @@
-# Full-Stack Student Performance Analytics Platform
+# Student Analytics Platform — Performance Tracking System
 
 > This project demonstrates backend system design concepts including APIs, data processing, and asynchronous workflows.
 
-I built this because our department tracks student performance in Excel sheets and it gets messy fast — slow to update, hard to filter, impossible to spot trends across subjects. I wanted to build something that actually works at scale with proper SQL.
+## Overview
 
-The platform ingests academic records for 1,000+ students across 5 departments, stores them in a normalized 3-table SQL schema, and surfaces performance trends through a dynamic dashboard — all loaded asynchronously with no page reloads.
+Built a full-stack web app to store and analyze student performance data for 1,000+ students. Implemented SQL queries to compute average scores and identify at-risk students. Designed a dynamic UI to display analytics and insights loaded asynchronously with no page reloads.
 
-## What it does
+The platform uses a normalized 3-table SQL schema across 5 departments and surfaces performance trends through a real-time dashboard.
+
+## Features
 
 - Ingests and stores academic records for **1,000+ students** across departments (CSE, ECE, ME, EE, CE)
 - Normalized SQL schema with 3 tables: `students`, `subjects`, `grades` — with foreign keys and proper indexing
@@ -20,14 +22,14 @@ The platform ingests academic records for 1,000+ students across 5 departments, 
 
 Python · Flask · SQLite · JavaScript (Fetch API) · HTML5 · CSS3
 
-## Setup
+## How to Run
 
 ```bash
 pip install -r requirements.txt
 python app.py
 ```
 
-The database is created and seeded automatically on first run. Opens at `http://localhost:5003`.
+The database is created and seeded automatically on first run with 1,000 students. Opens at `http://localhost:5003`.
 
 ## API
 
@@ -89,3 +91,7 @@ subjects (id, name, code, department, credits, semester)
 - **MVC structure**: routes handle HTTP, SQL queries live in dedicated functions, dashboard renders from Fetch API responses
 - **Async data loading**: JavaScript Fetch API pulls each analytics endpoint independently — dashboard sections load in parallel
 - **Seeded with 1,000 students** across 5 departments and 15 subjects on first run
+
+## Output
+
+See [sample_output.txt](sample_output.txt) for real API request/response examples including dashboard summary, at-risk student detection, student detail breakdown, and top performer listing.
